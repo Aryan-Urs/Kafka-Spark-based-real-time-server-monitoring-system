@@ -1,0 +1,16 @@
+Starting Zookeeper: bin/zookeeper-server-start.sh config/zookeeper.properties
+
+Starting Kafka Server: bin/kafka-server-start.sh config/server.properties
+
+Creating the 4 topics: 
+
+./kafka-topics.sh --create --topic topic-cpu --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+
+./kafka-topics.sh --create --topic topic-mem --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+
+./kafka-topics.sh --create --topic topic-net --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+
+./kafka-topics.sh --create --topic topic-disk --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1

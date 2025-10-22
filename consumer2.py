@@ -3,7 +3,7 @@ import os
 import shutil
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, FloatType
-from pyspark.sql.functions import from_json, col
+from pyspark.sql.functions import from_json, col, round as spark_round
 
 # --- Configuration ---
 KAFKA_BOOTSTRAP_SERVER = "172.28.204.229:9092"
@@ -60,14 +60,23 @@ def main():
     net_df = read_kafka_batch(spark, NET_TOPIC, net_schema)
     disk_df = read_kafka_batch(spark, DISK_TOPIC, disk_schema)
 
+    # --- Round numeric columns to 2 decimal places ---
+    net_df = net_df.withColumn("net_in", spark_round(col("net_in"), 2)) \
+                   .withColumn("net_out", spark_round(col("net_out"), 2))
+    disk_df = disk_df.withColumn("disk_io", spark_round(col("disk_io"), 2))
+
     # --- Save raw data ---
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    write_single_csv(net_df.dropDuplicates(["server_id", "ts"]).orderBy("server_id", "ts"),
-                     os.path.join(script_dir, "net_data.csv"))
-    write_single_csv(disk_df.dropDuplicates(["server_id", "ts"]).orderBy("server_id", "ts"),
-                     os.path.join(script_dir, "disk_data.csv"))
+    write_single_csv(
+        net_df.dropDuplicates(["server_id", "ts"]).orderBy("server_id", "ts"),
+        os.path.join(script_dir, "net_data.csv")
+    )
+    write_single_csv(
+        disk_df.dropDuplicates(["server_id", "ts"]).orderBy("server_id", "ts"),
+        os.path.join(script_dir, "disk_data.csv")
+    )
 
-    print(" Saved raw net and disk data.")
+    print("✅ Saved raw NET and DISK data.")
     spark.stop()
 
 if __name__ == "__main__":

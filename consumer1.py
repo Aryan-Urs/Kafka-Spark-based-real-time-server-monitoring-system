@@ -3,7 +3,7 @@ import os
 import shutil
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, FloatType
-from pyspark.sql.functions import from_json, col
+from pyspark.sql.functions import from_json, col, round as spark_round
 
 # --- Configuration ---
 KAFKA_BOOTSTRAP_SERVER = "172.28.204.229:9092"
@@ -54,8 +54,12 @@ def main():
     cpu_df = read_kafka_batch(spark, CPU_TOPIC, cpu_schema)
     mem_df = read_kafka_batch(spark, MEM_TOPIC, mem_schema)
 
+    # --- Round numeric columns to 2 decimal places ---
+    cpu_df = cpu_df.withColumn("cpu_pct", spark_round(col("cpu_pct"), 2))
+    mem_df = mem_df.withColumn("mem_pct", spark_round(col("mem_pct"), 2))
+
     # --- Save raw CPU/MEM data ---
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    script_dir = os.path.dirname(os.path.abspath(file))
     cpu_path = os.path.join(script_dir, "cpu_data.csv")
     mem_path = os.path.join(script_dir, "mem_data.csv")
 
@@ -67,5 +71,5 @@ def main():
 
     spark.stop()
 
-if __name__ == "__main__":
+if name == "main":
     main()
